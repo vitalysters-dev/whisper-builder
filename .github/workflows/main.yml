@@ -1,4 +1,4 @@
-name: Build Statically Optimized Whisper.cpp for CoreELEC
+name: Build LEGACY Statically Optimized Whisper.cpp for CoreELEC
 
 on:
   push:
@@ -13,42 +13,35 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git make cmake g++-aarch64-linux-gnu
+          sudo apt-get install -y git make g++-aarch64-linux-gnu
 
-      - name: Clone whisper.cpp STABLE repository
-        uses: "actions/checkout@v4"
+      - name: Clone whisper.cpp LEGACY repository
+        uses: actions/checkout@v4
         with:
-          repository: "ggml-org/whisper.cpp"
-          ref: "v1.6.0"
-          submodules: true
+          repository: ggerganov/whisper.cpp # Старый репозиторий, т.к. там есть старые теги
+          # --- ГЛАВНОЕ ИЗМЕНЕНИЕ: Используем старую, простую, рабочую версию ---
+          ref: v1.4.2
+          path: whisper.cpp
 
-      - name: Create Toolchain File
+      - name: Compile Statically with LEGACY Makefile
+        working-directory: whisper.cpp
         run: |
-          echo 'set(CMAKE_SYSTEM_NAME Linux)' > aarch64-toolchain.cmake
-          echo 'set(CMAKE_SYSTEM_PROCESSOR aarch64)' >> aarch64-toolchain.cmake
-          echo 'set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)' >> aarch64-toolchain.cmake
-          echo 'set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)' >> aarch64-toolchain.cmake
-
-      - name: Compile Statically with CMake
-        run: |
-          # --- ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ: Собираем ТОЛЬКО то, что нам нужно ---
-          cmake -S . -B build \
-            -DCMAKE_TOOLCHAIN_FILE=aarch64-toolchain.cmake \
-            -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53 -static" \
-            -DWHISPER_BUILD_TESTS=OFF \
-            -DWHISPER_BUILD_EXAMPLES=OFF # Отключаем ВСЕ примеры по умолчанию
-
-          # А теперь собираем ТОЛЬКО ОДИН нужный нам пример 'main'
-          cmake --build build --target main -j
+          # --- Этот Makefile простой и предсказуемый. Он сработает. ---
+          make -j$(nproc) main \
+            CC="aarch64-linux-gnu-gcc" \
+            CXX="aarch64-linux-gnu-g++" \
+            CFLAGS="-I. -O3 -DNDEBUG -std=c11 -fPIC -pthread -mtune=cortex-a53" \
+            CXXFLAGS="-I. -I./examples -O3 -DNDEBUG -std=c++11 -fPIC -pthread -mtune=cortex-a53" \
+            LDFLAGS="-static"
 
       - name: Check file size and type
         run: |
           echo "Checking built file:"
-          ls -lh build/bin/main
-          file build/bin/main
+          ls -lh whisper.cpp/main
+          file whisper.cpp/main
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: optimized-whisper-static-main
-          path: build/bin/main
+          name: optimized-whisper-static-main-LEGACY
+          path: whisper.cpp/main
