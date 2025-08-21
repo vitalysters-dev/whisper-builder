@@ -18,15 +18,18 @@ jobs:
       - name: Clone whisper.cpp LEGACY repository
         uses: actions/checkout@v4
         with:
-          repository: ggerganov/whisper.cpp # Старый репозиторий, т.к. там есть старые теги
-          # --- ГЛАВНОЕ ИЗМЕНЕНИЕ: Используем старую, простую, рабочую версию ---
+          repository: ggerganov/whisper.cpp
           ref: v1.4.2
           path: whisper.cpp
+
+      - name: Patch Makefile to remove test run
+        working-directory: whisper.cpp
+        # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Удаляем тестовый запуск из Makefile ---
+        run: sed -i '/^\.\/main -h/d' Makefile
 
       - name: Compile Statically with LEGACY Makefile
         working-directory: whisper.cpp
         run: |
-          # --- Этот Makefile простой и предсказуемый. Он сработает. ---
           make -j$(nproc) main \
             CC="aarch64-linux-gnu-gcc" \
             CXX="aarch64-linux-gnu-g++" \
@@ -43,5 +46,6 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: optimized-whisper-static-main-LEGACY
+          name: optimized-whisper-static-main-LEGACY-v142
           path: whisper.cpp/main
+          
