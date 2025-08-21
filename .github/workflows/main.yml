@@ -35,16 +35,15 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE=../aarch64-toolchain.cmake \
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53 -static" \
             -DWHISPER_OPENBLAS=ON \
-            -DBUILD_SHARED_LIBS=OFF
+            -DBUILD_SHARED_LIBS=OFF \
+            -DWHISPER_BUILD_EXAMPLES=OFF # Отключаем сборку лишних примеров
 
-          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Собираем правильную цель 'whisper' ---
-          make -j$(nproc) whisper
+          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Собираем и библиотеку, и главный исполняемый файл ---
+          make -j$(nproc) whisper main
 
-      - name: Rename and Upload Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: optimized-whisper-main
-          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Упаковываем правильный файл 'whisper' ---
-          path: build/bin/whisper
-          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Переименовываем его в 'main' для совместимости ---
-          rename: main
+          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Упаковываем правильный файл из правильного места ---
+          path: build/bin/main
