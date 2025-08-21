@@ -27,11 +27,9 @@ jobs:
       - name: Compile with OpenBLAS and Optimizations
         working-directory: whisper.cpp
         run: |
-          # Запускаем сборку с правильными флагами и правильной целью 'main'
-          # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
-          # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
-          # CXXFLAGS: Флаги оптимизации под ваш процессор
-          WHISPER_OPENBLAS=1 make -j$(nproc) main \
+          # Запускаем сборку с правильными флагами (БЕЗ УКАЗАНИЯ ЦЕЛИ)
+          # Make сам выберет цель по умолчанию, которой и является 'main'
+          WHISPER_OPENBLAS=1 make -j$(nproc) \
             CXX=aarch64-linux-gnu-g++ \
             CXXFLAGS="-O3 -mtune=cortex-a53 -mfpu=neon-fp-armv8"
 
