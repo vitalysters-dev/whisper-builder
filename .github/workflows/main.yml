@@ -25,9 +25,7 @@ jobs:
       - name: Compile with OpenBLAS and Optimizations
         working-directory: whisper.cpp
         run: |
-          # Очищаем перед сборкой
-          make clean
-          # Запускаем сборку с флагами
+          # Запускаем очистку и сборку одной командой с правильными флагами
           # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
           # -j$(nproc): Используем все доступные ядра процессора для ускорения сборки
           # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
@@ -35,7 +33,7 @@ jobs:
           #   -O3: Максимальная скорость
           #   -mtune=cortex-a53: Оптимизация под ядро вашего процессора S905X3
           #   -mfpu=neon-fp-armv8: Использование NEON-инструкций
-          WHISPER_OPENBLAS=1 make -j$(nproc) main \
+          make clean && WHISPER_OPENBLAS=1 make -j$(nproc) main \
             CXX=aarch64-linux-gnu-g++ \
             CXXFLAGS="-O3 -mtune=cortex-a53 -mfpu=neon-fp-armv8"
 
