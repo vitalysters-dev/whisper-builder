@@ -1,7 +1,7 @@
 # Имя нашего "рецепта"
 name: Build Optimized Whisper.cpp for CoreELEC
 
-# Триггер: запускать сборку при каждом коммите (сохранении) в основную ветку
+# Триггер: запускать сборку при каждом коммите
 on:
   push:
     branches:
@@ -17,29 +17,37 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git make g++-aarch64-linux-gnu libopenblas-dev
+          sudo apt-get install -y git make cmake g++-aarch64-linux-gnu libopenblas-dev
 
       # Шаг 2: Скачиваем исходный код whisper.cpp
       - name: Clone whisper.cpp repository
-        run: git clone https://github.com/ggerganov/whisper.cpp.git
+        uses: actions/checkout@v4
+        with:
+          repository: ggerganov/whisper.cpp
+          submodules: true # Важно для скачивания всех зависимостей
 
-      # Шаг 3: Компиляция с максимальной оптимизацией (ИСПРАВЛЕНО)
-      - name: Compile with OpenBLAS and Optimizations
-        working-directory: whisper.cpp
+      # Шаг 3: Компиляция по ОФИЦИАЛЬНОЙ инструкции с CMake (ИСПРАВЛЕНО)
+      - name: Compile with CMake, OpenBLAS and Optimizations
         run: |
-          # Запускаем сборку с правильными флагами и АКТУАЛЬНОЙ целью 'whisper'
-          # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
-          # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
-          # CXXFLAGS: Флаги оптимизации под ваш процессор
-          WHISPER_OPENBLAS=1 make -j$(nproc) whisper \
-            CXX=aarch64-linux-gnu-g++ \
-            CXXFLAGS="-O3 -mtune=cortex-a53"
+          # Создаем и переходим в папку для сборки
+          mkdir build && cd build
 
-      # Шаг 4: Переименовываем и упаковываем готовый файл
-      # (переименовываем whisper в main для совместимости с вашими скриптами)
-      - name: Rename and Upload Artifact
+          # Запускаем CMake для генерации проекта
+          # DCMAKE_C_COMPILER и DCMAKE_CXX_COMPILER: указываем кросс-компиляторы
+          # DCMAKE_CXX_FLAGS: передаем флаги оптимизации
+          # DWHISPER_OPENBLAS=ON: включаем поддержку OpenBLAS
+          cmake .. \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+            -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" \
+            -DWHISPER_OPENBLAS=ON
+
+          # Запускаем make для компиляции
+          make -j$(nproc) main
+
+      # Шаг 4: Упаковываем готовый файл 'main'
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: optimized-whisper-main
-          path: whisper.cpp/whisper
-          rename: main
+          path: build/bin/main
