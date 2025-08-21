@@ -27,17 +27,19 @@ jobs:
       - name: Compile with OpenBLAS and Optimizations
         working-directory: whisper.cpp
         run: |
-          # Запускаем сборку с правильными флагами. 'make main' - правильная цель.
+          # Запускаем сборку с правильными флагами и АКТУАЛЬНОЙ целью 'whisper'
           # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
           # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
-          # CXXFLAGS: Флаги оптимизации под ваш процессор (удален проблемный флаг -mfpu)
-          WHISPER_OPENBLAS=1 make -j$(nproc) main \
+          # CXXFLAGS: Флаги оптимизации под ваш процессор
+          WHISPER_OPENBLAS=1 make -j$(nproc) whisper \
             CXX=aarch64-linux-gnu-g++ \
             CXXFLAGS="-O3 -mtune=cortex-a53"
 
-      # Шаг 4: Упаковываем готовый файл в артефакт
-      - name: Upload Artifact
+      # Шаг 4: Переименовываем и упаковываем готовый файл
+      # (переименовываем whisper в main для совместимости с вашими скриптами)
+      - name: Rename and Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: optimized-whisper-main
-          path: whisper.cpp/main
+          path: whisper.cpp/whisper
+          rename: main
