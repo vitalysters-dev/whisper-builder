@@ -7,13 +7,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Используем совместимую версию Ubuntu ---
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git make cmake g++-aarch64-linux-gnu
+          sudo apt-get install -y git make cmake g++-aarch64-linux-gnu libc6-arm64-cross binutils-aarch64-linux-gnu
 
       - name: Clone whisper.cpp STABLE repository
         uses: actions/checkout@v4
@@ -38,21 +39,15 @@ jobs:
             -DWHISPER_BUILD_TESTS=OFF
           make -j$(nproc) main
 
-      - name: Package Executable and ALL Dependencies
+      - name: Package Executable and Dependencies
         run: |
           mkdir package
           cp build/bin/main package/
-          cp build/libwhisper.so package/
-          # --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Правильные пути для Ubuntu ---
-          cp /usr/aarch64-linux-gnu/lib/libstdc++.so.6 package/
-          cp /usr/aarch64-linux-gnu/lib/libm.so.6 package/
-          cp /usr/aarch64-linux-gnu/lib/libc.so.6 package/
-          cp /usr/aarch64-linux-gnu/lib/libgcc_s.so.1 package/
-          # --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Вот он, правильный путь к загрузчику ---
-          cp /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 package/
+          # Эта команда теперь найдет все нужные библиотеки из среды Ubuntu 22.04
+          aarch64-linux-gnu-ldd build/bin/main | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp '{}' package/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: optimized-whisper-full-package
+          name: optimized-whisper-package-ubuntu2204
           path: package
