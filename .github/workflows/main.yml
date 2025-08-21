@@ -32,7 +32,6 @@ jobs:
       - name: Compile with CMake Optimizations
         run: |
           mkdir build && cd build
-          # Собираем как динамическую библиотеку
           cmake .. \
             -DCMAKE_TOOLCHAIN_FILE=../aarch64-toolchain.cmake \
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" \
@@ -41,19 +40,16 @@ jobs:
 
       - name: Package Executable and ALL Dependencies
         run: |
-          # Создаем нашу финальную папку
           mkdir package
-          # Копируем туда "тело" (main)
           cp build/bin/main package/
-          # Копируем туда "мозг" (libwhisper.so)
           cp build/libwhisper.so package/
-          # Находим и копируем "нервную систему" (базовые библиотеки)
-          # Мы знаем их стандартные пути в Ubuntu
+          # --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Правильные пути для Ubuntu ---
           cp /usr/aarch64-linux-gnu/lib/libstdc++.so.6 package/
           cp /usr/aarch64-linux-gnu/lib/libm.so.6 package/
           cp /usr/aarch64-linux-gnu/lib/libc.so.6 package/
           cp /usr/aarch64-linux-gnu/lib/libgcc_s.so.1 package/
-          cp /lib/aarch64-linux-gnu/ld-linux-aarch64.so.1 package/
+          # --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Вот он, правильный путь к загрузчику ---
+          cp /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.1 package/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
