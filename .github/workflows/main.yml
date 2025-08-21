@@ -21,13 +21,13 @@ jobs:
           repository: ggml-org/whisper.cpp
           ref: v1.6.0
           submodules: true
+          # --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Явно указываем, куда скачивать код ---
+          path: whisper.cpp
 
       - name: Compile Statically with Makefile
         working-directory: whisper.cpp
         run: |
           # Используем Makefile напрямую, игнорируя CMake
-          # CROSS_COMPILE=aarch64-linux-gnu-: Указываем префикс для кросс-компилятора
-          # CFLAGS="-O3 -mtune=cortex-a53 -static": Передаем все флаги
           make -j$(nproc) main \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CFLAGS="-O3 -mtune=cortex-a53 -static"
