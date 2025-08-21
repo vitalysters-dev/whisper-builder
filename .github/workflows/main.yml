@@ -27,10 +27,6 @@ jobs:
           echo 'set(CMAKE_SYSTEM_PROCESSOR aarch64)' >> aarch64-toolchain.cmake
           echo 'set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)' >> aarch64-toolchain.cmake
           echo 'set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)' >> aarch64-toolchain.cmake
-          echo 'set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)' >> aarch64-toolchain.cmake
-          echo 'set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)' >> aarch64-toolchain.cmake
-          echo 'set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> aarch64-toolchain.cmake
-          echo 'set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)' >> aarch64-toolchain.cmake
 
       - name: Compile with CMake, OpenBLAS and Static Linking
         run: |
@@ -41,10 +37,14 @@ jobs:
             -DWHISPER_OPENBLAS=ON \
             -DBUILD_SHARED_LIBS=OFF
 
-          make -j$(nproc) main
+          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Собираем правильную цель 'whisper' ---
+          make -j$(nproc) whisper
 
-      - name: Upload Artifact
+      - name: Rename and Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: optimized-whisper-main
-          path: build/bin/main
+          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Упаковываем правильный файл 'whisper' ---
+          path: build/bin/whisper
+          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Переименовываем его в 'main' для совместимости ---
+          rename: main
