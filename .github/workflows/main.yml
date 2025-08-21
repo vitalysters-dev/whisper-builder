@@ -36,10 +36,10 @@ jobs:
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53 -static" \
             -DWHISPER_OPENBLAS=ON \
             -DBUILD_SHARED_LIBS=OFF \
-            -DWHISPER_BUILD_EXAMPLES=OFF # Отключаем сборку лишних примеров
+            -DWHISPER_BUILD_EXAMPLES=ON # Убеждаемся, что примеры включены
 
-          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Собираем и библиотеку, и главный исполняемый файл ---
-          make -j$(nproc) whisper main
+          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Собираем только одну, нужную нам цель 'main' ---
+          make -j$(nproc) main
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
