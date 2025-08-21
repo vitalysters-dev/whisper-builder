@@ -13,7 +13,6 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          # --- ИЗМЕНЕНИЕ: Убрали libopenblas-arm64-dev ---
           sudo apt-get install -y git make cmake g++-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-arm64-cross
 
       - name: Clone whisper.cpp STABLE repository
@@ -33,11 +32,8 @@ jobs:
       - name: Compile with CMake Optimizations
         run: |
           mkdir build && cd build
-          cmake .. \
-            -DCMAKE_TOOLCHAIN_FILE=../aarch64-toolchain.cmake \
-            -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" \
-            # --- ИЗМЕНЕНИЕ: Убрали флаг OpenBLAS ---
-            -DWHISPER_BUILD_TESTS=OFF
+          # --- СИНТАКСИС ИСПРАВЛЕН: все флаги теперь гарантированно в одной команде ---
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=../aarch64-toolchain.cmake -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" -DWHISPER_BUILD_TESTS=OFF
           make -j$(nproc) main
 
       - name: Package Executable and Dependencies
