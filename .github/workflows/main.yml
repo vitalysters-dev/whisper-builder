@@ -13,7 +13,6 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          # --- ИЗМЕНЕНИЕ: Убрали libopenblas-dev ---
           sudo apt-get install -y git make cmake g++-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
       - name: Clone whisper.cpp STABLE repository
@@ -33,10 +32,10 @@ jobs:
       - name: Compile with CMake Optimizations
         run: |
           mkdir build && cd build
+          # --- ИСПРАВЛЕНИЕ: Все флаги cmake теперь в одной команде ---
           cmake .. \
             -DCMAKE_TOOLCHAIN_FILE=../aarch64-toolchain.cmake \
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" \
-            # --- ИЗМЕНЕНИЕ: Убрали флаги OpenBLAS и статической линковки ---
             -DWHISPER_BUILD_TESTS=OFF
           make -j$(nproc) main
 
@@ -44,7 +43,6 @@ jobs:
         run: |
           mkdir package
           cp build/bin/main package/
-          # Запускаем ldd, чтобы упаковать только базовые системные библиотеки (например, libstdc++)
           aarch64-linux-gnu-ldd build/bin/main | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp '{}' package/
 
       - name: Upload Artifact
