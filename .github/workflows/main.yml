@@ -11,16 +11,15 @@ jobs:
 
     steps:
       - name: Install Build Dependencies
-        # --- ИЗМЕНЕНИЕ: Добавляем binutils для ldd ---
         run: |
           sudo apt-get update
-          sudo apt-get install -y git make cmake g++-aarch64-linux-gnu libopenblas-dev binutils-aarch64-linux-gnu
+          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Устанавливаем OpenBLAS для aarch64 ---
+          sudo apt-get install -y git make cmake g++-aarch64-linux-gnu libopenblas-arm64-dev binutils-aarch64-linux-gnu
 
       - name: Clone whisper.cpp STABLE repository
         uses: actions/checkout@v4
         with:
           repository: ggml-org/whisper.cpp
-          # --- ИЗМЕНЕНИЕ: Используем стабильную, предсказуемую версию ---
           ref: v1.6.0
           submodules: true
 
@@ -30,6 +29,7 @@ jobs:
           echo 'set(CMAKE_SYSTEM_PROCESSOR aarch64)' >> aarch64-toolchain.cmake
           echo 'set(CMAKE_C_COMPILER aarch64-linux-gnu-gcc)' >> aarch64-toolchain.cmake
           echo 'set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)' >> aarch64-toolchain.cmake
+          echo 'set(CMAKE_FIND_ROOT_PATH "/usr/aarch64-linux-gnu")' >> aarch64-toolchain.cmake
 
       - name: Compile with CMake and OpenBLAS
         run: |
@@ -39,14 +39,12 @@ jobs:
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" \
             -DWHISPER_OPENBLAS=ON \
             -DWHISPER_BUILD_TESTS=OFF
-          # --- ИЗМЕНЕНИЕ: Собираем правильный 'main' из стабильной версии ---
           make -j$(nproc) main
 
       - name: Package Executable and Dependencies
         run: |
           mkdir package
           cp build/bin/main package/
-          # --- ИЗМЕНЕНИЕ: Теперь ldd сработает ---
           aarch64-linux-gnu-ldd build/bin/main | grep "=> /" | awk '{print $3}' | xargs -I '{}' cp '{}' package/
 
       - name: Upload Artifact
