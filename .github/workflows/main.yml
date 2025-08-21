@@ -1,9 +1,12 @@
 # Имя нашего "рецепта"
 name: Build Optimized Whisper.cpp for CoreELEC
 
-# Триггер: запускать сборку вручную
+# --- ИЗМЕНЕНИЕ ЗДЕСЬ: Автоматический запуск при сохранении ---
+# Триггер: запускать сборку при каждом коммите (сохранении) в основную ветку
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main # Если ваша основная ветка называется 'master', измените 'main' на 'master'
 
 jobs:
   build:
@@ -21,19 +24,15 @@ jobs:
       - name: Clone whisper.cpp repository
         run: git clone https://github.com/ggerganov/whisper.cpp.git
 
-      # Шаг 3: Компиляция с максимальной оптимизацией
+      # Шаг 3: Компиляция с максимальной оптимизацией (ИСПРАВЛЕНО)
       - name: Compile with OpenBLAS and Optimizations
         working-directory: whisper.cpp
         run: |
-          # Запускаем очистку и сборку одной командой с правильными флагами
+          # Запускаем сборку с правильными флагами (команда 'make clean' удалена)
           # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
-          # -j$(nproc): Используем все доступные ядра процессора для ускорения сборки
           # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
-          # CXXFLAGS="-O3 -mtune=cortex-a53 -mfpu=neon-fp-armv8": Флаги оптимизации
-          #   -O3: Максимальная скорость
-          #   -mtune=cortex-a53: Оптимизация под ядро вашего процессора S905X3
-          #   -mfpu=neon-fp-armv8: Использование NEON-инструкций
-          make clean && WHISPER_OPENBLAS=1 make -j$(nproc) main \
+          # CXXFLAGS: Флаги оптимизации под ваш процессор
+          WHISPER_OPENBLAS=1 make -j$(nproc) main \
             CXX=aarch64-linux-gnu-g++ \
             CXXFLAGS="-O3 -mtune=cortex-a53 -mfpu=neon-fp-armv8"
 
