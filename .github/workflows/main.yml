@@ -21,16 +21,18 @@ jobs:
           repository: ggml-org/whisper.cpp
           ref: v1.6.0
           submodules: true
-          # --- ИСПРАВЛЕНИЕ ЗДЕСЬ: Явно указываем, куда скачивать код ---
           path: whisper.cpp
 
       - name: Compile Statically with Makefile
         working-directory: whisper.cpp
         run: |
-          # Используем Makefile напрямую, игнорируя CMake
+          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Передаем make ПРАВИЛЬНЫЕ переменные ---
           make -j$(nproc) main \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            CFLAGS="-O3 -mtune=cortex-a53 -static"
+            CC="aarch64-linux-gnu-gcc" \
+            CXX="aarch64-linux-gnu-g++" \
+            CFLAGS="-O3 -mtune=cortex-a53 -static" \
+            CXXFLAGS="-O3 -mtune=cortex-a53 -static" \
+            LDFLAGS="-static"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
