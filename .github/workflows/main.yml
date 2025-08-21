@@ -15,10 +15,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y git make cmake g++-aarch64-linux-gnu libopenblas-dev
 
-      - name: Clone whisper.cpp repository
+      - name: Clone whisper.cpp repository (from ggml-org)
         uses: actions/checkout@v4
         with:
-          repository: ggerganov/whisper.cpp
+          # --- ИЗМЕНЕНИЕ: Используем самый новый, правильный репозиторий ---
+          repository: ggml-org/whisper.cpp
           submodules: true
 
       - name: Create Toolchain File
@@ -31,19 +32,19 @@ jobs:
       - name: Compile with CMake, OpenBLAS and Static Linking
         run: |
           mkdir build && cd build
+          # --- ИЗМЕНЕНИЕ: Добавлен флаг для отключения тестов, чтобы избежать ошибок ---
           cmake .. \
             -DCMAKE_TOOLCHAIN_FILE=../aarch64-toolchain.cmake \
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53 -static" \
             -DWHISPER_OPENBLAS=ON \
             -DBUILD_SHARED_LIBS=OFF \
-            -DWHISPER_BUILD_EXAMPLES=ON # Убеждаемся, что примеры включены
+            -DWHISPER_BUILD_TESTS=OFF # Отключаем сборку тестов
 
-          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Собираем только одну, нужную нам цель 'main' ---
+          # Собираем только одну, нужную нам цель 'main'
           make -j$(nproc) main
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: optimized-whisper-main
-          # --- ИЗМЕНЕНИЕ ЗДЕСЬ: Упаковываем правильный файл из правильного места ---
           path: build/bin/main
