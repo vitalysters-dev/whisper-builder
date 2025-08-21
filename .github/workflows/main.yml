@@ -24,25 +24,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ggerganov/whisper.cpp
-          submodules: true # Важно для скачивания всех зависимостей
+          submodules: true
 
-      # Шаг 3: Компиляция по ОФИЦИАЛЬНОЙ инструкции с CMake (ИСПРАВЛЕНО)
-      - name: Compile with CMake, OpenBLAS and Optimizations
+      # Шаг 3: Компиляция со статической линковкой (ИСПРАВЛЕНО)
+      - name: Compile with CMake, OpenBLAS and Static Linking
         run: |
-          # Создаем и переходим в папку для сборки
           mkdir build && cd build
-
-          # Запускаем CMake для генерации проекта
-          # DCMAKE_C_COMPILER и DCMAKE_CXX_COMPILER: указываем кросс-компиляторы
-          # DCMAKE_CXX_FLAGS: передаем флаги оптимизации
-          # DWHISPER_OPENBLAS=ON: включаем поддержку OpenBLAS
+          # Добавлены флаги для статической линковки:
+          # -DBUILD_SHARED_LIBS=OFF: Отключаем сборку динамических библиотек
+          # -DCMAKE_EXE_LINKER_FLAGS="-static": Приказываем линковщику включить все в .exe
           cmake .. \
             -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
             -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
             -DCMAKE_CXX_FLAGS="-O3 -mtune=cortex-a53" \
-            -DWHISPER_OPENBLAS=ON
+            -DWHISPER_OPENBLAS=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DCMAKE_EXE_LINKER_FLAGS="-static"
 
-          # Запускаем make для компиляции
+          # Собираем цель 'main'
           make -j$(nproc) main
 
       # Шаг 4: Упаковываем готовый файл 'main'
