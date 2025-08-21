@@ -13,34 +13,32 @@ jobs:
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y git g++-aarch64-linux-gnu
+          sudo apt-get install -y git make g++-aarch64-linux-gnu
 
       - name: Clone whisper.cpp STABLE repository
         uses: actions/checkout@v4
         with:
           repository: ggml-org/whisper.cpp
-          ref: v1.6.0
-          submodules: true
+          # --- ИЗМЕНЕНИЕ: Берем более старую, но очень стабильную версию ---
+          ref: v1.5.4
           path: whisper.cpp
 
-      - name: Compile Statically (Manual Method)
+      - name: Compile Statically with Makefile
         working-directory: whisper.cpp
         run: |
-          # --- Ручная компиляция для полного контроля ---
-          aarch64-linux-gnu-g++ \
-            -I. -I./examples \
-            -O3 -mtune=cortex-a53 -static \
-            -pthread \
-            -o main \
-            examples/main/main.cpp \
-            examples/common.cpp \
-            examples/common-ggml.cpp \
-            examples/grammar-parser.cpp \
-            whisper.cpp \
-            ggml.c ggml-alloc.c ggml-backend.c ggml-quants.c
+          # --- Используем самый простой и надежный метод ---
+          make -j$(nproc) main \
+            CC="aarch64-linux-gnu-gcc" \
+            CXX="aarch64-linux-gnu-g++"
+
+      - name: Check file size and type
+        run: |
+          echo "Checking built file:"
+          ls -lh whisper.cpp/main
+          file whisper.cpp/main
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: optimized-whisper-static-main
+          name: optimized-whisper-static-main-v154
           path: whisper.cpp/main
