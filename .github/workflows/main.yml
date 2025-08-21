@@ -26,13 +26,14 @@ jobs:
       - name: Compile Statically with Makefile
         working-directory: whisper.cpp
         run: |
-          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Добавляем пути к заголовочным файлам ---
+          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Добавляем флаг GGML_NO_NUMA=1 ---
           make -j$(nproc) main \
             CC="aarch64-linux-gnu-gcc" \
             CXX="aarch64-linux-gnu-g++" \
             CFLAGS="-I. -I./examples -O3 -mtune=cortex-a53 -static" \
             CXXFLAGS="-I. -I./examples -O3 -mtune=cortex-a53 -static" \
-            LDFLAGS="-static"
+            LDFLAGS="-static" \
+            GGML_NO_NUMA=1
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
