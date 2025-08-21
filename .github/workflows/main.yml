@@ -1,7 +1,6 @@
 # Имя нашего "рецепта"
 name: Build Optimized Whisper.cpp for CoreELEC
 
-# --- ИЗМЕНЕНИЕ ЗДЕСЬ: Автоматический запуск при сохранении ---
 # Триггер: запускать сборку при каждом коммите (сохранении) в основную ветку
 on:
   push:
@@ -28,7 +27,7 @@ jobs:
       - name: Compile with OpenBLAS and Optimizations
         working-directory: whisper.cpp
         run: |
-          # Запускаем сборку с правильными флагами (команда 'make clean' удалена)
+          # Запускаем сборку с правильными флагами и правильной целью 'main'
           # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
           # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
           # CXXFLAGS: Флаги оптимизации под ваш процессор
