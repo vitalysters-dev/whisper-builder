@@ -26,12 +26,12 @@ jobs:
       - name: Compile Statically with Makefile
         working-directory: whisper.cpp
         run: |
-          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Передаем make ПРАВИЛЬНЫЕ переменные ---
+          # --- ГЛАВНОЕ ИСПРАВЛЕНИЕ: Добавляем пути к заголовочным файлам ---
           make -j$(nproc) main \
             CC="aarch64-linux-gnu-gcc" \
             CXX="aarch64-linux-gnu-g++" \
-            CFLAGS="-O3 -mtune=cortex-a53 -static" \
-            CXXFLAGS="-O3 -mtune=cortex-a53 -static" \
+            CFLAGS="-I. -I./examples -O3 -mtune=cortex-a53 -static" \
+            CXXFLAGS="-I. -I./examples -O3 -mtune=cortex-a53 -static" \
             LDFLAGS="-static"
 
       - name: Upload Artifact
