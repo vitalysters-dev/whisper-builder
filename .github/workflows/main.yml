@@ -41,7 +41,7 @@ jobs:
 
       # Шаг 4: Упаковываем готовый файл в артефакт
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: optimized-whisper-main
           path: whisper.cpp/main
