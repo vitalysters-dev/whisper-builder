@@ -1,0 +1,47 @@
+# Имя нашего "рецепта"
+name: Build Optimized Whisper.cpp for CoreELEC
+
+# Триггер: запускать сборку вручную
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Запускать на самой свежей версии Ubuntu
+    runs-on: ubuntu-latest
+
+    steps:
+      # Шаг 1: Установка необходимых инструментов
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git make g++-aarch64-linux-gnu libopenblas-dev
+
+      # Шаг 2: Скачиваем исходный код whisper.cpp
+      - name: Clone whisper.cpp repository
+        run: git clone https://github.com/ggerganov/whisper.cpp.git
+
+      # Шаг 3: Компиляция с максимальной оптимизацией
+      - name: Compile with OpenBLAS and Optimizations
+        working-directory: whisper.cpp
+        run: |
+          # Очищаем перед сборкой
+          make clean
+          # Запускаем сборку с флагами
+          # WHISPER_OPENBLAS=1: Включаем поддержку OpenBLAS
+          # -j$(nproc): Используем все доступные ядра процессора для ускорения сборки
+          # CXX=aarch64-linux-gnu-g++: Указываем кросс-компилятор
+          # CXXFLAGS="-O3 -mtune=cortex-a53 -mfpu=neon-fp-armv8": Флаги оптимизации
+          #   -O3: Максимальная скорость
+          #   -mtune=cortex-a53: Оптимизация под ядро вашего процессора S905X3
+          #   -mfpu=neon-fp-armv8: Использование NEON-инструкций
+          WHISPER_OPENBLAS=1 make -j$(nproc) main \
+            CXX=aarch64-linux-gnu-g++ \
+            CXXFLAGS="-O3 -mtune=cortex-a53 -mfpu=neon-fp-armv8"
+
+      # Шаг 4: Упаковываем готовый файл в артефакт
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: optimized-whisper-main
+          path: whisper.cpp/main
